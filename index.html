@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0c1221">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TaxiAquíAcá">
+<title>TaxiAquíAcá</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/jpeg" href="./icon-192.jpg">
+<link rel="apple-touch-icon" href="./icon-192.jpg">
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <img src="./logo-header.jpg" class="logo" style="object-fit:cover" alt="TaxiAquíAcá">
+  <div class="header-info">
+    <h1>TaxiAquíAcá</h1>
+    <p id="header-fecha">Cargando...</p>
+  </div>
+  <div class="gps-dot">
+    <span class="dot" id="gps-dot-indicator"></span>
+    <span id="gps-status-text">GPS</span>
+  </div>
+</header>
+
+<!-- ═══ HUD 2x2 ═══ -->
+<div class="hud">
+  <div class="hud-item">
+    <div class="hud-label">Velocidad</div>
+    <div class="hud-val" id="hud-vel" style="color:#00E676">0 km/h</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">KM Turno</div>
+    <div class="hud-val" id="hud-km" style="color:#60a5fa">0.0</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">Gas Turno</div>
+    <div class="hud-val" id="hud-gas-uso" style="color:#f59e0b">0.00L</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">Cronómetro</div>
+    <div class="hud-val" id="hud-crono" style="color:#a78bfa">00:00:00</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PANTALLA INICIO ═══════════════════ -->
+<div id="p-inicio" class="pantalla activa">
+
+  <!-- KM Total + Tanque — EDITABLES con candado -->
+  <div class="card">
+    <div class="grid2">
+      <div class="campo-editable-wrap">
+        <div class="card-label">Odómetro Total</div>
+        <div id="vista-odo">
+          <div class="card-val" id="disp-odo">517,487</div>
+          <div style="font-size:11px;color:#64748b;font-family:monospace;margin-top:2px">km acumulados</div>
+        </div>
+        <div id="edit-odo" style="display:none">
+          <input type="number" class="input-editable" id="input-odo-edit" step="0.1">
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn btn-sm btn-verde" style="flex:1;padding:8px" onclick="confirmarEdicionOdo()">✓ Guardar</button>
+            <button class="btn btn-sm btn-gris" style="flex:1;padding:8px" onclick="cancelarEdicionOdo()">✕</button>
+          </div>
+        </div>
+        <button class="btn-editar-mini" onclick="iniciarEdicionOdo()" title="Editar manualmente">✏️</button>
+      </div>
+
+      <div class="campo-editable-wrap">
+        <div class="card-label">Tanque Virtual</div>
+        <div id="vista-gas">
+          <div style="font-size:24px;font-weight:900;font-family:monospace;color:#f59e0b" id="disp-gas">29.0 L</div>
+          <div class="gas-bar"><div class="gas-fill" id="gas-barra" style="width:58%;background:#22c55e"></div></div>
+        </div>
+        <div id="edit-gas" style="display:none">
+          <input type="number" class="input-editable" id="input-gas-edit" step="0.1" max="50" min="0">
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn btn-sm btn-verde" style="flex:1;padding:8px" onclick="confirmarEdicionGas()">✓ Guardar</button>
+            <button class="btn btn-sm btn-gris" style="flex:1;padding:8px" onclick="cancelarEdicionGas()">✕</button>
+          </div>
+        </div>
+        <button class="btn-editar-mini" onclick="iniciarEdicionGas()" title="Editar manualmente">✏️</button>
+      </div>
+    </div>
+    <div id="alerta-gas" style="display:none;margin-top:9px" class="alerta alerta-rojo">
+      ⚠️ RESERVA CRÍTICA — Cargar gasolina pronto
+    </div>
+  </div>
+
+  <!-- ESTADO DE TURNO -->
+  <div class="card">
+    <div class="card-label">Estado de Turno</div>
+    <div style="display:flex;gap:11px;margin-top:9px;align-items:center;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;color:#64748b;font-family:monospace">KM en turno</div>
+        <div style="font-size:19px;font-weight:900;font-family:monospace" id="disp-km-turno">0.0 km</div>
+      </div>
+      <div style="width:1px;height:42px;background:var(--borde)"></div>
+      <div>
+        <div style="font-size:11px;color:#64748b;font-family:monospace">Utilidad neta</div>
+        <span class="valor-oculto" id="utilidad-toggle" onclick="toggleUtilidad()">$</span>
+      </div>
+      <div style="width:1px;height:42px;background:var(--borde)"></div>
+      <div>
+        <div style="font-size:11px;color:#64748b;font-family:monospace">Rendimiento</div>
+        <div style="font-size:19px;font-weight:900;font-family:monospace;color:#60a5fa" id="disp-rend">11.0</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-verde" id="btn-maestro" onclick="toggleTurno()">🚀 INICIAR LABORES</button>
+  <div style="height:11px"></div>
+  <button class="btn btn-gris btn-sm" id="btn-pausa" style="display:none" onclick="togglePausa()">
+    ⏸️ PAUSAR GPS (BAJADA DE PASAJE)
+  </button>
+
+</div>
+
+<!-- ═══════════════════ PANTALLA COLECTIVO ═══════════════════ -->
+<div id="p-colectivo" class="pantalla">
+
+  <div class="card" style="text-align:center">
+    <div class="card-label">Pasajeros a bordo</div>
+    <div class="pax-display" id="disp-pax">0 / 5</div>
+    <div class="grid2">
+      <button class="btn btn-verde btn-sm" id="btn-subir" onclick="pax(1)">➕ SUBIR</button>
+      <button class="btn btn-rojo btn-sm" id="btn-bajar" onclick="pax(-1)">➖ BAJAR</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Cobro Rápido de Pasaje</div>
+    <div class="grid3" style="margin-top:11px" id="grid-cobro">
+      <button class="btn-cobro" onclick="cobrar(15)" disabled>$15</button>
+      <button class="btn-cobro" onclick="cobrar(20)" disabled>$20</button>
+      <button class="btn-cobro" onclick="cobrar(25)" disabled>$25</button>
+      <button class="btn-cobro" onclick="cobrar(30)" disabled>$30</button>
+      <button class="btn-cobro" onclick="cobrar(40)" disabled>$40</button>
+      <button class="btn-cobro" onclick="cobrar(50)" disabled>$50</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+      <div class="card-label">Bitácora del turno</div>
+      <div style="font-size:14px;font-weight:900;font-family:monospace;color:#00E676" id="disp-total-col">Total: $0</div>
+    </div>
+    <div id="log-colectivo" style="max-height:210px;overflow-y:auto">
+      <div style="text-align:center;color:#64748b;font-size:12px;padding:20px;font-family:monospace">Sin registros aún</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ PANTALLA COTIZADOR ═══════════════════ -->
+<div id="p-cotizador" class="pantalla">
+
+  <div class="card">
+    <div class="card-label">📍 Mi posición actual</div>
+    <div style="font-size:12px;color:#94a3b8;font-family:monospace;margin-top:5px" id="mi-posicion">Activando GPS...</div>
+    <button class="btn btn-gris btn-sm" style="margin-top:10px" onclick="registrarUbicacionActual()">
+      📌 REGISTRAR ESTA UBICACIÓN
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">🎯 Destino del cliente</div>
+    <div style="display:flex;gap:9px;margin-top:9px">
+      <input type="text" id="input-dest" class="input-dest" placeholder="Colonia, hotel, dirección..."
+        onkeydown="if(event.key==='Enter') calcularTarifa()">
+      <button class="btn btn-amarillo btn-sm" style="width:auto;padding:11px 17px;white-space:nowrap" onclick="calcularTarifa()">🧮 IA</button>
+    </div>
+    <div style="margin-top:11px;font-size:10px;color:#64748b;font-family:monospace;margin-bottom:7px">DESTINOS FRECUENTES:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px" id="presets-rutas">
+      <button onclick="setDest('Aeropuerto')" class="chip-preset">✈️ Aeropuerto</button>
+      <button onclick="setDest('Hotel Princess')" class="chip-preset">🏨 Princess</button>
+      <button onclick="setDest('La Quebrada')" class="chip-preset">🌊 Quebrada</button>
+      <button onclick="setDest('Zócalo Centro')" class="chip-preset">🏛️ Zócalo</button>
+    </div>
+  </div>
+
+  <div id="resultado-ia" style="display:none">
+    <div class="alerta alerta-verde" id="ia-status-msg">✅ Cálculo completado</div>
+
+    <div class="card" style="border-color:rgba(0,230,118,.3)">
+      <div class="card-label" style="color:#00E676">📍 Ubicación y Tiempo Estimado</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px">
+        <div>
+          <div style="font-size:10px;color:#64748b;font-family:monospace">TU POSICIÓN</div>
+          <div style="font-size:12px;font-family:monospace" id="eta-mi-posicion">--</div>
+        </div>
+        <div style="width:1px;height:34px;background:var(--borde)"></div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:#64748b;font-family:monospace">ETA AL DESTINO</div>
+          <div style="font-size:19px;font-weight:900;font-family:monospace;color:#60a5fa" id="eta-tiempo">-- min</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(96,165,250,.3)">
+      <div class="card-label" style="color:#60a5fa">🗺️ Corrección de Km Real</div>
+      <div style="font-size:11px;color:#94a3b8;margin:6px 0 10px;line-height:1.5">
+        Si al abrir Google Maps te mandó a otra ubicación, anota aquí el km real que muestra la app y la IA recalculará con ese dato.
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="input-km-real" class="form-input" placeholder="Km real de Google Maps" step="0.1" style="flex:1">
+        <button class="btn btn-sm btn-azul" style="width:auto;padding:11px 16px" onclick="recalcularConKmReal()">↻ Recalcular</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">📊 Desglose del Cálculo</div>
+      <div id="ia-desglose" style="font-size:11px;color:#94a3b8;font-family:monospace;margin-top:7px;line-height:1.8"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">💰 Tarifas de Referencia (toca para ver)</div>
+      <div class="precio-cards">
+        <div class="precio-card minimo" onclick="revelarPrecio('minimo')" id="card-minimo">
+          <div class="precio-card-label">Mínimo</div>
+          <div id="val-minimo-oculto" class="valor-oculto" style="margin:0 auto">$</div>
+        </div>
+        <div class="precio-card normal" onclick="revelarPrecio('normal')" id="card-normal">
+          <div class="precio-card-label">Normal ★</div>
+          <div id="val-normal-oculto" class="valor-oculto" style="margin:0 auto">$</div>
+        </div>
+        <div class="precio-card especial" onclick="revelarPrecio('especial')" id="card-especial">
+          <div class="precio-card-label">Especial</div>
+          <div id="val-especial-oculto" class="valor-oculto" style="margin:0 auto">$</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#64748b;font-family:monospace;text-align:center;margin-top:8px">
+        Estos son solo de referencia, no se cobran automáticamente
+      </div>
+    </div>
+
+    <div class="card" style="border-color:var(--amarillo)">
+      <div class="card-label" style="color:var(--amarillo)">💵 Monto Real Cobrado</div>
+      <div style="font-size:11px;color:#94a3b8;margin:6px 0 10px">Este es el valor que se suma a tus ingresos del turno.</div>
+      <input type="number" id="input-monto-real" class="form-input" placeholder="0" style="font-size:24px;font-weight:900;color:var(--amarillo);text-align:center;font-family:monospace">
+      <button class="btn btn-amarillo" style="margin-top:11px" onclick="confirmarServicio()">🚀 REGISTRAR SERVICIO</button>
+    </div>
+
+    <button class="btn btn-gris btn-sm" id="btn-nav-nativo" onclick="abrirGoogleMaps()" style="margin-bottom:13px">🗺️ ABRIR EN GOOGLE MAPS</button>
+  </div>
+
+  <div id="ia-loading" style="display:none;text-align:center;padding:32px">
+    <div class="spinner"></div>
+    <div style="font-size:12px;color:#64748b;font-family:monospace;margin-top:13px" id="ia-loading-msg">Calculando...</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ PANTALLA MECÁNICO ═══════════════════ -->
+<div id="p-mant" class="pantalla">
+
+  <div class="card">
+    <div class="card-label">🔧 IA Mantenimiento — Tsuru 3 E16</div>
+    <div style="font-size:12px;color:#94a3b8;margin:7px 0 13px">Describe lo que sientes en el carro:</div>
+    <button class="sintoma-btn" onclick="mostrarDiagnostico('brinca_rebota')">🚗 Brinca o rebota mucho</button>
+    <button class="sintoma-btn" onclick="mostrarDiagnostico('gasta_mucho_gasolina')">⛽ Gasta más gasolina</button>
+    <button class="sintoma-btn" onclick="mostrarDiagnostico('jala_chueco')">↩️ Jala hacia un lado</button>
+    <button class="sintoma-btn" onclick="mostrarDiagnostico('ruido_al_frenar')">🔊 Ruido al frenar</button>
+    <button class="sintoma-btn" onclick="mostrarDiagnostico('motor_tiembla_ralenti')">〰️ Motor tiembla en ralentí</button>
+    <button class="sintoma-btn" onclick="mostrarDiagnostico('sobrecalentamiento')">🌡️ Motor se calienta</button>
+  </div>
+
+  <div id="diag-resultado" style="display:none"><div class="card" id="diag-card"></div></div>
+
+  <div class="card" style="border-color:rgba(96,165,250,.35)">
+    <div class="card-label" style="color:#60a5fa">⛽ Registrar Carga de Combustible</div>
+    <div id="badge-alerta-mant" class="alerta-mant-badge alerta-mant-ok" style="margin-bottom:9px">✅ Mantenimiento al día</div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Km inicial</label>
+        <input type="number" id="gas-km-inicial" class="form-input" placeholder="km al último llenado">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Km actual</label>
+        <input type="number" id="gas-km-actual" class="form-input" placeholder="km ahora">
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Litros cargados</label>
+        <input type="number" id="gas-litros" class="form-input" placeholder="Lt" step="0.01">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Costo por litro</label>
+        <input type="number" id="gas-costo-lt" class="form-input" placeholder="$/Lt" step="0.01">
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Estación</label>
+        <input type="text" id="gas-estacion" class="form-input" placeholder="Ej. Mantarraya">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Bomba</label>
+        <input type="text" id="gas-bomba" class="form-input" placeholder="N° de bomba">
+      </div>
+    </div>
+    <button class="btn btn-azul" id="btn-guardar-combustible" onclick="guardarCarga()">⛽ GUARDAR CARGA</button>
+    <button class="btn btn-gris" id="btn-cancelar-edicion-combustible" style="display:none" onclick="cancelarEdicionCombustible()">✕ Cancelar edición</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📋 Historial de Combustible</div>
+    <div id="historial-combustible" style="margin-top:9px;max-height:280px;overflow-y:auto">
+      <div style="font-size:12px;color:#64748b;font-family:monospace;padding:11px 0;text-align:center">Sin cargas registradas</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(0,230,118,.3)">
+    <div class="card-label" style="color:var(--verde)">✅ Checklist de Mantenimiento</div>
+    <div style="font-size:11px;color:#94a3b8;margin:6px 0 11px">Marca lo que se revisó/cambió hoy — igual que la bitácora en Excel.</div>
+    <div class="form-field">
+      <label class="form-label">Odómetro (km)</label>
+      <input type="number" id="chk-km" class="form-input" placeholder="km actual">
+    </div>
+    <div id="checklist-items"></div>
+    <button class="btn btn-verde" id="btn-guardar-checklist" onclick="guardarChecklist()">✅ GUARDAR CHECKLIST</button>
+    <button class="btn btn-gris" id="btn-cancelar-edicion-checklist" style="display:none" onclick="cancelarEdicionChecklist()">✕ Cancelar edición</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📋 Historial de Checklist</div>
+    <div id="historial-checklist" style="margin-top:9px;max-height:280px;overflow-y:auto">
+      <div style="font-size:12px;color:#64748b;font-family:monospace;padding:11px 0;text-align:center">Sin checklists registrados</div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(255,214,0,.3)">
+    <div class="card-label" style="color:var(--amarillo)">📝 Registrar Servicio Realizado (correctivo / con costo)</div>
+    <div class="form-field">
+      <label class="form-label">Componente / Servicio</label>
+      <input type="text" id="mec-componente" class="form-input" placeholder="Ej: Cambio de aceite">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Tipo</label>
+      <select id="mec-tipo" class="form-select">
+        <option value="preventivo">Preventivo</option>
+        <option value="correctivo">Correctivo (reparación)</option>
+      </select>
+    </div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Costo ($)</label>
+        <input type="number" id="mec-costo" class="form-input" placeholder="0">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Odómetro (km)</label>
+        <input type="number" id="mec-odo" class="form-input" placeholder="km actual">
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Taller</label>
+      <input type="text" id="mec-taller" class="form-input" placeholder="Nombre del taller">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Notas (opcional)</label>
+      <textarea id="mec-notas" class="form-textarea" placeholder="Detalles adicionales..."></textarea>
+    </div>
+    <button class="btn btn-amarillo" onclick="guardarServicioMecanico()">💾 GUARDAR EN BITÁCORA</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📅 Próximos Mantenimientos</div>
+    <div id="alertas-prev" style="margin-top:9px"><div style="font-size:12px;color:#64748b;font-family:monospace;padding:11px 0">Cargando...</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📋 Historial de Servicios</div>
+    <div id="historial-mecanico" style="margin-top:9px;max-height:280px;overflow-y:auto">
+      <div style="font-size:12px;color:#64748b;font-family:monospace;padding:11px 0;text-align:center">Sin servicios registrados</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ PANTALLA FINANZAS ═══════════════════ -->
+<div id="p-finanzas" class="pantalla">
+
+  <div class="card">
+    <div class="card-label">📊 Dashboard Maestro</div>
+    <div class="dash-grid" style="margin-top:11px">
+      <div class="dash-item"><div class="dash-label">Ingresos hoy</div><div class="dash-val" style="color:#22c55e" id="dash-ingresos">$0</div></div>
+      <div class="dash-item"><div class="dash-label">Gastos hoy</div><div class="dash-val" style="color:#ef4444" id="dash-gastos">$0</div></div>
+      <div class="dash-item"><div class="dash-label">Fondo unidad</div><div class="dash-val" style="color:#FFD600" id="dash-fondo">$0</div></div>
+      <div class="dash-item"><div class="dash-label">Próx. mantto</div><div class="dash-val" style="color:#60a5fa;font-size:13px" id="dash-mantto">--</div></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="date" id="busqueda-desde" class="form-input" style="flex:1">
+      <input type="date" id="busqueda-hasta" class="form-input" style="flex:1">
+    </div>
+    <button class="btn btn-gris btn-sm" style="margin-top:8px" onclick="buscarPorRango()">🔍 Buscar en rango</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">💰 Balance del Turno</div>
+    <div class="fin-row"><span>Ingresos brutos</span><span class="val-pos" id="fin-ingresos">$0</span></div>
+    <div class="fin-row"><span>Gasto gasolina</span><span class="val-neg" id="fin-gas">-$0</span></div>
+    <div class="fin-row"><span>Mantenimiento</span><span class="val-neg" id="fin-mant">-$0</span></div>
+    <div class="fin-row"><span style="font-weight:900">Utilidad neta</span><span class="val-neu" id="fin-utilidad">$0</span></div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:13px">
+    <button class="btn btn-gris btn-sm" onclick="registrarGasto('Gastos varios')">🧾 Gastos varios</button>
+    <button class="btn btn-gris btn-sm" onclick="irA('mant')">🔧 Registrar mantenimiento</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">🏦 Fondo Cambio de Unidad</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px">
+      <div style="font-size:30px;font-weight:900;font-family:monospace;color:#00E676" id="fin-fondo">$0</div>
+      <div style="font-size:12px;color:#64748b;font-family:monospace" id="fin-meta">de $25,000</div>
+    </div>
+    <div class="progreso-fondo"><div class="progreso-fill" id="fin-fondo-barra" style="width:0%"></div></div>
+    <div style="font-size:11px;color:#94a3b8;font-family:monospace" id="fin-proyeccion">Sin datos aún</div>
+    <div style="height:11px"></div>
+    <button class="btn btn-verde btn-sm" onclick="apartarAhorro()">💰 APARTAR AHORRO DE HOY</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📤 Respaldo y Exportación</div>
+    <div class="grid2" style="margin-top:9px">
+      <button class="btn btn-azul btn-sm" onclick="compartirBitacora()">📲 Compartir / Drive</button>
+      <button class="btn btn-gris btn-sm" onclick="exportarCSV()">📄 CSV</button>
+    </div>
+    <button class="btn btn-gris btn-sm" style="margin-top:9px" onclick="exportarPDF()">📑 PDF con gráficos</button>
+  </div>
+
+  <div class="card" id="card-ia-ahorro" style="display:none">
+    <div class="card-label">💡 IA Administrativa sugiere</div>
+    <div id="ia-ahorro-msg" style="font-size:13px;color:#94a3b8;margin-top:7px;font-family:monospace;line-height:1.6"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📋 Historial de Gastos</div>
+    <div id="historial-gastos" style="margin-top:9px;max-height:210px;overflow-y:auto">
+      <div style="font-size:12px;color:#64748b;font-family:monospace;padding:11px 0;text-align:center">Sin gastos registrados</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ PANTALLA AJUSTES ═══════════════════ -->
+<div id="p-ajustes" class="pantalla">
+
+  <div class="card">
+    <div class="card-label">⛽ Combustible y rendimiento</div>
+    <div class="form-field">
+      <label class="form-label">Precio de gasolina ($/litro)</label>
+      <input type="number" id="aj-precio-gas" class="form-input" step="0.01">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Rendimiento del auto (km/litro)</label>
+      <input type="number" id="aj-rendimiento" class="form-input" step="0.1">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Capacidad del tanque (litros)</label>
+      <input type="number" id="aj-capacidad-tanque" class="form-input" step="1">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">🧮 Tarifas base del cotizador</div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Banderazo diurno</label>
+        <input type="number" id="aj-banderazo-diurno" class="form-input">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Banderazo vespertino</label>
+        <input type="number" id="aj-banderazo-vespertino" class="form-input">
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Banderazo nocturno</label>
+        <input type="number" id="aj-banderazo-nocturno" class="form-input">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Costo por km</label>
+        <input type="number" id="aj-costo-km" class="form-input">
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(96,165,250,.35)">
+    <div class="card-label" style="color:#60a5fa">📲 App de clientes — cargo por ir a recogerlo</div>
+    <div style="font-size:11px;color:#94a3b8;margin:2px 0 9px">Se suma a la tarifa normal SOLO en la app de clientes. Mínimo fijo hasta cierta distancia de tu sitio, luego cobra extra por km.</div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Cargo mínimo ($)</label>
+        <input type="number" id="aj-cargo-min-recogida" class="form-input">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Cubre hasta (km)</label>
+        <input type="number" id="aj-km-base-recogida" class="form-input">
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Extra por km después de eso ($/km)</label>
+      <input type="number" id="aj-costo-km-extra-recogida" class="form-input">
+    </div>
+    <div class="grid2">
+      <div class="form-field">
+        <label class="form-label">Sitio base — Latitud</label>
+        <input type="number" id="aj-sitio-lat" class="form-input" step="0.0001">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Sitio base — Longitud</label>
+        <input type="number" id="aj-sitio-lon" class="form-input" step="0.0001">
+      </div>
+    </div>
+    <button class="btn btn-gris btn-sm" onclick="usarUbicacionComoSitioBase()">📍 Usar mi ubicación actual como sitio base</button>
+    <div style="font-size:10px;color:#64748b;margin:10px 0 6px">Ubicación de respaldo si el rastreo en vivo (abajo) no está disponible.</div>
+  </div>
+
+  <div class="card" style="border-color:rgba(52,211,153,.35)">
+    <div class="card-label" style="color:#34d399">📡 Rastreo en vivo (Supabase)</div>
+    <div style="font-size:11px;color:#94a3b8;margin:2px 0 9px">Mientras trabajas, tu ubicación se transmite cada 15s para que el cliente vea qué tan lejos estás. Gratis (plan Free de Supabase).</div>
+    <div class="form-field">
+      <label class="form-label">Project URL</label>
+      <input type="text" id="aj-supabase-url" class="form-input" placeholder="https://xxxx.supabase.co">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Anon public key</label>
+      <input type="password" id="aj-supabase-key" class="form-input" placeholder="eyJhbGciOi...">
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(37,211,102,.35)">
+    <div class="card-label" style="color:#25D366">📲 WhatsApp y políticas para clientes</div>
+    <div class="form-field">
+      <label class="form-label">WhatsApp (con lada país, sin +, ej. 527441234567)</label>
+      <input type="text" id="aj-whatsapp" class="form-input" placeholder="527441234567">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Políticas de cancelación (una por línea)</label>
+      <textarea id="aj-politicas" class="form-textarea" rows="5"></textarea>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(255,214,0,.35)">
+    <div class="card-label" style="color:var(--amarillo)">🔄 Sincronizar tarifas con la app de clientes</div>
+    <div style="font-size:11px;color:#94a3b8;margin:2px 0 9px">Sube automáticamente las tarifas de arriba al repositorio de GitHub de tu app de clientes — sin entrar a github.com.</div>
+    <div class="form-field">
+      <label class="form-label">Usuario/organización de GitHub</label>
+      <input type="text" id="aj-github-owner" class="form-input" placeholder="ej. NextMorpheo">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Nombre del repositorio</label>
+      <input type="text" id="aj-github-repo" class="form-input" placeholder="TaxiAquiAca---Clientes">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Token de acceso (Personal Access Token)</label>
+      <input type="password" id="aj-github-token" class="form-input" placeholder="ghp_...">
+    </div>
+    <div style="font-size:10px;color:#64748b;line-height:1.5;margin-bottom:4px">
+      Créalo en github.com → foto de perfil → Settings → Developer settings → Personal access tokens → Fine-grained tokens → dale acceso SOLO a este repositorio, permiso "Contents: Read and write".
+    </div>
+    <button class="btn btn-amarillo" onclick="sincronizarTarifasClientes()">🔄 ACTUALIZAR TARIFAS DE CLIENTES AHORA</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">🏦 Meta del fondo de cambio de unidad</div>
+    <div class="form-field">
+      <label class="form-label">Meta ($)</label>
+      <input type="number" id="aj-meta-fondo" class="form-input">
+    </div>
+  </div>
+
+  <button class="btn btn-verde" onclick="guardarAjustesGenerales()">💾 GUARDAR AJUSTES</button>
+  <div style="height:14px"></div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+      <div class="card-label">📍 Tabla de destinos frecuentes</div>
+    </div>
+    <div id="aj-lista-tarifas" style="max-height:240px;overflow-y:auto;margin-bottom:11px"></div>
+    <button class="btn btn-gris btn-sm" onclick="agregarTarifaDestino()">➕ Agregar destino</button>
+  </div>
+
+  <button class="btn btn-gris btn-sm" onclick="restaurarAjustes()">↺ Restaurar valores de fábrica</button>
+  <div style="height:20px"></div>
+
+</div>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <button class="tab active" onclick="irA('inicio')" id="tab-inicio"><span class="tab-icon">🏠</span><span>INICIO</span></button>
+  <button class="tab" onclick="irA('colectivo')" id="tab-colectivo"><span class="tab-icon">🚐</span><span>COLECTIVO</span></button>
+  <button class="tab" onclick="irA('cotizador')" id="tab-cotizador"><span class="tab-icon">🧮</span><span>COTIZAR</span></button>
+  <button class="tab" onclick="irA('mant')" id="tab-mant"><span class="tab-icon">🔧</span><span>MECÁNICO</span></button>
+  <button class="tab" onclick="irA('finanzas')" id="tab-finanzas"><span class="tab-icon">💰</span><span>FINANZAS</span></button>
+  <button class="tab" onclick="irA('ajustes')" id="tab-ajustes"><span class="tab-icon">⚙️</span><span>AJUSTES</span></button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- jsPDF para exportación PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<div class="card" id="card-login" style="max-width:340px;margin:40px auto">
+  <div class="card-label">🔐 Iniciar sesión</div>
+  <div class="form-field">
+    <label class="form-label">Correo</label>
+    <input type="email" id="email" class="form-input" placeholder="tu@correo.com">
+  </div>
+  <div class="form-field">
+    <label class="form-label">Contraseña</label>
+    <input type="password" id="password" class="form-input" placeholder="••••••••">
+  </div>
+  <button class="btn btn-verde" id="loginBtn" style="margin-top:9px">Entrar</button>
+</div>
+
+<script type="module" src="./js/main.js"></script>
+
+<script type="module">
+  import { loginUser } from './js/auth-logic.js';
+
+  document.getElementById('loginBtn').addEventListener('click', () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    loginUser(email, password);
+  });
+</script>
+
+</body>
+</html>

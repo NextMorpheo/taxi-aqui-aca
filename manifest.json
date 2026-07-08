@@ -1,0 +1,25 @@
+{
+  "name": "TaxiAqu\u00edAc\u00e1",
+  "short_name": "TaxiAqu\u00edAc\u00e1",
+  "description": "App de gesti\u00f3n para taxi - Acapulco, Guerrero",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d16",
+  "theme_color": "#0c1221",
+  "icons": [
+    {
+      "src": "./icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
